@@ -1,4 +1,16 @@
-import { Flex, Input, Button, Divider, Heading, Stack, FormLabel, FormControl, } from '@chakra-ui/react';
+import {
+  Flex,
+  Input,
+  Button,
+  Heading,
+  Stack,
+  Image,
+  HStack,
+  InputGroup,
+  InputLeftElement
+} from '@chakra-ui/react';
+
+import { FiUserCheck, FiLock, FiArrowRight } from 'react-icons/fi';
 
 export default function SignIn() {
   return (
@@ -7,74 +19,77 @@ export default function SignIn() {
       h='100vh'
       align='center'
       justify='center'
+      px='10'
+      bg='cyan.900'
     >
+      <Stack maxWidth={390} width='100%' spacing='8'>
+        <HStack display='flex' align='center' justify='flex-start'>
+          <Image src='/images/logo-mini.svg' boxSize={9} />
+          <Image src='/images/logo-name.svg' boxSize={20} />
+        </HStack>
+        <Heading fontSize='50px' size='lg' color='gray.100'>
+          Faça seu login na plataforma
+        </Heading>
+      </Stack>
       <Flex
         as='form'
         width='100%'
-        maxWidth={360}
-        bg='cyan.500'
-        p='8'
-        borderRadius={8}
+        maxWidth={480}
+        bg='cyan.800'
+        p='16'
+        borderRadius={4}
         flexDir='column'
       >
-        <Heading
-          textAlign='center'
-          width='100%'
-          fontSize='x-large'
-        >
-          Clinica Superação
-        </Heading>
-        <Divider mt='4' mb='9' />
         <Stack spacing='4'>
-          <FormControl>
-            <FormLabel
-              htmlFor='username'
-              color='gray.50'
-            >
-              Usuário
-            </FormLabel>
+          <InputGroup>
+            <InputLeftElement
+              pointerEvents='none'
+              children={<FiUserCheck size={18} />}
+            />
             <Input
               name='username'
-              id='username'
               type='text'
-              focusBorderColor='cyan.700'
-              bgColor='cyan.600'
+              placeholder='Usuário'
+              focusBorderColor='gray.100'
+              color='gray.100'
+              bgColor='cyan.900'
               variant='filled'
               borderRadius={4}
-              _hover={{ bgColor: 'cyan.700' }}
+              _hover={{ bgColor: 'cyan.900' }}
               size='lg'
+              isRequired
             />
-          </FormControl>
+          </InputGroup>
 
-          <FormControl>
-            <FormLabel
-              htmlFor='password'
-              color='gray.50'
-            >
-              Senha
-            </FormLabel>
+          <InputGroup>
+            <InputLeftElement
+              pointerEvents='none'
+              children={<FiLock size={18} />}
+            />
             <Input
               name='password'
-              id='password'
               type='password'
-              focusBorderColor='cyan.700'
-              bgColor='cyan.600'
+              placeholder='Senha'
+              focusBorderColor='gray.100'
+              color='gray.100'
+              bgColor='cyan.900'
               variant='filled'
               borderRadius={4}
-              _hover={{ bgColor: 'cyan.700' }}
+              _hover={{ bgColor: 'cyan.900' }}
               size='lg'
+              isRequired
             />
-          </FormControl>
+          </InputGroup>
         </Stack>
         <Button
           type='submit'
-          mt='6'
+          mt='8'
           colorScheme='gray'
           borderRadius={4}
           size='lg'
-        >Entrar</Button>
+          _hover={{ bg: 'gray.300' }}
+        >ENTRAR</Button>
       </Flex>
     </Flex>
-
   )
 }

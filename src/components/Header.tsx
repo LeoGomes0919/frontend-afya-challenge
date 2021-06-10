@@ -1,38 +1,37 @@
 import { Flex, Text, HStack, Avatar } from '@chakra-ui/react'
-import { RiUser3Fill } from 'react-icons/ri';
 
 export function Header() {
   return (
     <Flex
       as='header'
       w='100%'
-      maxW={1480}
-      h='20'
-      mx='auto'
-      mt='4'
-      px='6'
+      h='70px'
+      top='0'
+      right='0'
+      left='0'
+      py='2'
+      px='4'
       align='center'
+      position='fixed'
+      bg='cyan.900'
+      zIndex={1}
     >
       <Text
         fontSize='3xl'
         fontWeight='bold'
         letterSpacing='tight'
         w='64'
+        color='white'
       >
         clinicasup
-         <Text as='span' ml='1' color='cyan.600'>.</Text>
+         <Text as='span' ml='1' color='gray.100'>.</Text>
       </Text>
 
       <Flex
         align='center'
         ml='auto'
       >
-        <HStack spacing='4' mx='8' pr='8' py='1'>
-          <Avatar size='md' name='Leonardo Gomes de Almeida' />
-          <Text color='gray.900'>
-            Olá, Leonardo Gomes de Almeida Silva
-          </Text>
-        </HStack>
+        <Avatar size='md' name='Leonardo Gomes de Almeida' bg='cyan.800' color='white' />
       </Flex>
     </Flex>
   );
