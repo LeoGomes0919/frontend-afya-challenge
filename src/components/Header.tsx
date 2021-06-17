@@ -1,6 +1,9 @@
+import { useContext } from 'react';
 import { Flex, Text, HStack, Avatar } from '@chakra-ui/react'
+import { AuthContext } from '../contexts/AuthContext';
 
 export function Header() {
+  const { user } = useContext(AuthContext);
   return (
     <Flex
       as='header'
@@ -24,14 +27,14 @@ export function Header() {
         color='white'
       >
         clinicasup
-         <Text as='span' ml='1' color='gray.100'>.</Text>
+        <Text as='span' ml='1' color='gray.100'>.</Text>
       </Text>
 
       <Flex
         align='center'
         ml='auto'
       >
-        <Avatar size='md' name='Leonardo Gomes de Almeida' bg='cyan.800' color='white' />
+        <Avatar size='md' name={user?.name} bg='cyan.800' color='white' />
       </Flex>
     </Flex>
   );

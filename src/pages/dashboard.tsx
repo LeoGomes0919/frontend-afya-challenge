@@ -1,6 +1,8 @@
-import { Box, Flex } from "@chakra-ui/layout";
-import { Header } from "../components/Header";
-import { Sidebar } from "../components/Sidebar";
+import { useContext, useEffect } from 'react';
+import { Box, Flex } from '@chakra-ui/react';
+import { Header } from '../components/Header';
+import { Sidebar } from '../components/Sidebar';
+import { api } from '../services/api';
 
 export default function Dashboard() {
   return (

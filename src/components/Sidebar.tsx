@@ -1,6 +1,6 @@
-import { Box, Stack, Text, Icon, Avatar, Link, Divider } from "@chakra-ui/react";
+import { Box, Stack, Text, Icon, Avatar, Link } from "@chakra-ui/react";
 
-import { FiGrid, FiUsers, FiUser, FiCalendar, FiClipboard } from 'react-icons/fi';
+import { FiGrid, FiUsers, FiUser, FiCalendar, FiLogOut } from 'react-icons/fi';
 
 export function Sidebar() {
   return (
@@ -20,7 +20,7 @@ export function Sidebar() {
           <Avatar name='Clinica Superação' src='/images/logo-mini.svg' bg='transparent' size='2xl' ml='6' />
 
           <Stack spacing='2' mt='8' w='100%'>
-            <Link display='flex' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
+            <Link display='flex' href='/dashboard' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
               <Icon as={FiGrid} fontSize='22' mr='4' />
               <Text fontWeight='medium'>Dashboard</Text>
             </Link>
@@ -28,7 +28,7 @@ export function Sidebar() {
               <Icon as={FiUsers} fontSize='22' mr='4' />
               <Text fontWeight='medium'>Clientes</Text>
             </Link>
-            <Link display='flex' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
+            <Link display='flex' href='/specialists' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
               <Icon as={FiUser} fontSize='22' mr='4' />
               <Text fontWeight='medium'>Especialistas</Text>
             </Link>
@@ -39,6 +39,10 @@ export function Sidebar() {
             <Link display='flex' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
               <Icon as={FiCalendar} fontSize='22' mr='4' />
               <Text fontWeight='medium'>Prontuários</Text>
+            </Link>
+            <Link display='flex' alignItems='center' color='gray.100' pl='6' py='4' _hover={{ bg: 'cyan.500' }}>
+              <Icon as={FiLogOut} fontSize='22' mr='4' />
+              <Text fontWeight='medium'>Sair</Text>
             </Link>
           </Stack>
         </Stack>

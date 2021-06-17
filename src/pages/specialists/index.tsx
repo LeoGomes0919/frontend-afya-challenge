@@ -43,17 +43,12 @@ interface ClientProps {
   blood_type: string;
 }
 
-export default function Client() {
+export default function Specialist() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [clients, setClients] = useState<ClientProps[]>([]);
+  const [specialists, setSpecialists] = useState<ClientProps[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [cpf, setCpf] = useState('')
   const [telephone, setTelephone] = useState('');
   const [cell, setCell] = useState('');
-
-  const formateCPF = (value: string) => {
-    setCpf(cpfMask(value));
-  }
 
   async function handleRegisterClient(data) {
     console.log(data);
@@ -61,21 +56,9 @@ export default function Client() {
 
   function resetForm() {
     reset();
-    setCpf('');
     setTelephone('');
     setCell('');
   }
-
-  async function getClients() {
-    const response = await api.get('/clients');
-
-    const client = response.data;
-    setClients(client);
-  }
-
-  useEffect(() => {
-    getClients();
-  }, []);
 
   return (
     <Box>
@@ -96,7 +79,7 @@ export default function Client() {
           minH='100vh'
         >
           <Flex mb='2' justify='space-between' align='center'>
-            <Heading size='lg' fontWeight='normal'>Clientes</Heading>
+            <Heading size='lg' fontWeight='normal'>Especialistas</Heading>
             <Button
               cursor='pointer'
               as='a'
@@ -105,13 +88,13 @@ export default function Client() {
               leftIcon={<Icon as={FiUserPlus} />}
               onClick={onOpen}
             >
-              Cadastrar cliente
+              Cadastrar especialistas
             </Button>
           </Flex>
           <Divider />
 
           <Table variant='striped' mt='20' colorScheme='cyan' resize='horizontal'>
-            <TableCaption>{!clients.length ? 'Sem clientes cadastrados.' : ''}</TableCaption>
+            <TableCaption>{!specialists.length ? 'Sem specialistas cadastrados.' : ''}</TableCaption>
             < Thead >
               <Tr>
                 <Th>NOME</Th>
@@ -119,41 +102,11 @@ export default function Client() {
                 <Th>TELEFONE</Th>
                 <Th>CELULAR</Th>
                 <Th>EMAIL</Th>
-                <Th>TIPO SANG.</Th>
                 <Th>AÇÕES</Th>
               </Tr>
             </Thead>
             <Tbody fontSize={14}>
-              {clients.map(client => (
-                <Tr key={client.id}>
-                  <Td>{client.name}</Td>
-                  <Td>{client.cpf}</Td>
-                  <Td>{client.phone}</Td>
-                  <Td>{client.cellphone}</Td>
-                  <Td>{client.email}</Td>
-                  <Td textAlign='center'>{client.blood_type}</Td>
-                  <Td>
-                    <HStack spacing='2'>
-                      <Tooltip label='Editar' fontSize='small' placement='top'>
-                        <IconButton size='sm'
-                          variant="outline"
-                          colorScheme='orange'
-                          aria-label='Editar'
-                          icon={<FiEdit />}
-                        />
-                      </Tooltip>
-                      <Tooltip label='Excluir' fontSize='small' placement='top'>
-                        <IconButton size='sm'
-                          variant="outline"
-                          colorScheme='red'
-                          aria-label='Excluir'
-                          icon={<FiTrash />}
-                        />
-                      </Tooltip>
-                    </HStack>
-                  </Td>
-                </Tr>
-              ))}
+
             </Tbody>
           </Table>
           {/* <Pagination /> */}
@@ -181,19 +134,17 @@ export default function Client() {
                   )}
                 </FormControl>
                 <FormControl>
-                  <FormLabel mb='1'>CPF</FormLabel>
+                  <FormLabel mb='1'>Num. Registro</FormLabel>
                   <Input
-                    aria-invalid={errors.cpf ? 'true' : 'false'}
+                    aria-invalid={errors.register ? 'true' : 'false'}
                     {...register('cpf', { required: true })}
                     placeholder='Informe o CPF'
-                    name='cpf'
+                    name='register'
                     maxLength={14}
-                    value={cpf}
-                    onChange={(e) => formateCPF(e.target.value)}
                   />
-                  {errors.cpf && (
+                  {errors.register && (
                     <Text color='red' fontSize='xs'>
-                      CPF é obrigatório.
+                      Numero do registro é obrigatório.
                     </Text>
                   )}
                 </FormControl>
