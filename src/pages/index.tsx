@@ -9,6 +9,7 @@ import {
   HStack,
   InputGroup,
   InputLeftElement,
+  Text,
   Spinner,
   useToast
 } from '@chakra-ui/react';
@@ -42,25 +43,31 @@ export default function SignIn() {
       px='10'
       bg='cyan.900'
     >
-      <Stack maxWidth={390} width='100%' spacing='8'>
-        <HStack display='flex' align='center' justify='flex-start'>
-          <Image src='/images/logo-mini.svg' boxSize={9} />
-          <Image src='/images/logo-name.svg' boxSize={20} />
+      <Stack maxWidth={500} width='100%' spacing='8' pr='10'>
+        <HStack display='flex' align='center' justify='flex-end'>
+          <Image src='/images/logo.png' />
+          {/* <Image src='/images/logo-name.svg' boxSize={20} /> */}
         </HStack>
-        <Heading fontSize='50px' size='lg' color='gray.100'>
-          Faça seu login na plataforma
+        <Heading display='flex' flex='1' flexDir='column' border='2px' fontSize='50px' size='xl' color='gray.100' alignItems='flex-end'justify='flex-end'>
+            <Text display='flex'>faça seu <Text ml='4'>login</Text></Text>
+            <Text fontWeight='normal'>na plataforma</Text>
         </Heading>
       </Stack>
       <Flex
         onSubmit={handleSubmit(handleSignIn)}
         as='form'
         width='100%'
-        maxWidth={480}
-        bg='cyan.800'
+        maxWidth={550}
+        border='2px'
+        borderColor='cyan.400'
         p='16'
-        borderRadius={4}
+        borderRadius={20}
+        position='relative'
+        roundedTopLeft={100}
+        roundedBottomEnd={100}
         flexDir='column'
       >
+        <Image src='/images/logincircle.png' width={100} position='absolute' top='-10' right='-10'/>
         <Stack spacing='4'>
           <InputGroup>
             <InputLeftElement
@@ -72,12 +79,14 @@ export default function SignIn() {
               name='username'
               type='text'
               placeholder='Usuário'
-              focusBorderColor='gray.100'
-              color='gray.100'
-              bgColor='cyan.900'
+              focusBorderColor='gray.400'
+              color='cyan.900'
+              bgColor='white'
               variant='filled'
               borderRadius={4}
-              _hover={{ bgColor: 'cyan.900' }}
+              _hover={{ bgColor: 'white' }}
+              _focus={{ bgColor: 'white' }}
+              _placeholder={{ color: 'gray.500' }}
               size='lg'
               isRequired
             />
@@ -95,10 +104,11 @@ export default function SignIn() {
               placeholder='Senha'
               focusBorderColor='gray.100'
               color='gray.100'
-              bgColor='cyan.900'
+              bgColor='white'
               variant='filled'
               borderRadius={4}
-              _hover={{ bgColor: 'cyan.900' }}
+              _hover={{ bgColor: 'white' }}
+              _focus={{ bgColor: 'white' }}
               size='lg'
               isRequired
             />
