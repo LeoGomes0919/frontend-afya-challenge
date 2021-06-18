@@ -33,19 +33,18 @@ import { Sidebar } from "../../components/Sidebar";
 import { cpfMask, phoneMask } from '../../providers';
 import { api } from '../../services/api';
 
-interface ClientProps {
+interface SpecialistProps {
   id: number;
   name: string;
-  cpf: string;
+  registry: string;
   phone: string;
   cellphone: string;
   email: string;
-  blood_type: string;
 }
 
 export default function Specialist() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [specialists, setSpecialists] = useState<ClientProps[]>([]);
+  const [specialists, setSpecialists] = useState<SpecialistProps[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [telephone, setTelephone] = useState('');
   const [cell, setCell] = useState('');
@@ -53,6 +52,22 @@ export default function Specialist() {
   async function handleRegisterClient(data) {
     console.log(data);
   }
+
+  async function getSpecialists() {
+    try {
+      const response = await api.get('/specialists');
+
+      const specialist = response.data;
+
+      setSpecialists(specialist);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  useEffect(() => {
+    getSpecialists();
+  }, []);
 
   function resetForm() {
     reset();
@@ -98,7 +113,7 @@ export default function Specialist() {
             < Thead >
               <Tr>
                 <Th>NOME</Th>
-                <Th>CPF</Th>
+                <Th>NUM. REGISTRO</Th>
                 <Th>TELEFONE</Th>
                 <Th>CELULAR</Th>
                 <Th>EMAIL</Th>
@@ -106,7 +121,35 @@ export default function Specialist() {
               </Tr>
             </Thead>
             <Tbody fontSize={14}>
-
+              {specialists.map(specialist => (
+                <Tr key={specialist.id}>
+                  <Td>{specialist.name}</Td>
+                  <Td>{specialist.registry}</Td>
+                  <Td>{specialist.phone}</Td>
+                  <Td>{specialist.cellphone}</Td>
+                  <Td>{specialist.email}</Td>
+                  <Td>
+                    <HStack spacing='2'>
+                      <Tooltip label='Editar' fontSize='small' placement='top'>
+                        <IconButton size='sm'
+                          variant="outline"
+                          colorScheme='orange'
+                          aria-label='Editar'
+                          icon={<FiEdit />}
+                        />
+                      </Tooltip>
+                      <Tooltip label='Excluir' fontSize='small' placement='top'>
+                        <IconButton size='sm'
+                          variant="outline"
+                          colorScheme='red'
+                          aria-label='Excluir'
+                          icon={<FiTrash />}
+                        />
+                      </Tooltip>
+                    </HStack>
+                  </Td>
+                </Tr>
+              ))}
             </Tbody>
           </Table>
           {/* <Pagination /> */}

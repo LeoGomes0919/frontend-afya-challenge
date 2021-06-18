@@ -22,16 +22,29 @@ import {
   Input,
   SimpleGrid,
   TableCaption,
-  Text
+  Text,
+  useToast,
+  Spinner
 } from "@chakra-ui/react";
 import { useForm } from 'react-hook-form';
 import { FiEdit, FiTrash, FiUserPlus } from "react-icons/fi";
+import cep from 'cep-promise';
+
 import { Header } from "../../components/Header";
 import { ModalTemplate } from "../../components/ModalTemplate";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 import { cpfMask, phoneMask } from '../../providers';
 import { api } from '../../services/api';
+
+interface AddressProps {
+  id: number;
+  zip: string;
+  street: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+}
 
 interface ClientProps {
   id: number;
@@ -44,19 +57,82 @@ interface ClientProps {
 }
 
 export default function Client() {
+  const toast = useToast();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [clients, setClients] = useState<ClientProps[]>([]);
+  const [address, setAddress] = useState<AddressProps[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [cpf, setCpf] = useState('')
   const [telephone, setTelephone] = useState('');
   const [cell, setCell] = useState('');
+  const [zip, setZip] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const formateCPF = (value: string) => {
     setCpf(cpfMask(value));
   }
 
+  // async function loadingAddressFromZip(event) {
+  //   setZip(event.target.value);
+  //   if (zip.length >= 8) {
+  //     const response = await cep(zip);
+  //     console.log(response);
+  //   }
+  // }
+
+  async function getClients() {
+    const response = await api.get('/clients');
+
+    const client = response.data;
+    setClients(client);
+  }
+
   async function handleRegisterClient(data) {
-    console.log(data);
+    const {
+      name,
+      cpf,
+      phone,
+      cellphone,
+      email,
+      blood_type,
+      zip,
+      street,
+      neighborhood,
+      city,
+      state
+    } = data;
+
+    const client = {
+      name,
+      cpf,
+      phone,
+      cellphone,
+      email,
+      blood_type,
+      address: {
+        zip,
+        street,
+        neighborhood,
+        city,
+        state
+      }
+    }
+
+    try {
+      await api.post('/clients', client);
+      getClients();
+      toast({
+        description: 'Cliente cadastrado com sucesso!',
+        status: 'success',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
+      reset();
+      onClose();
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   function resetForm() {
@@ -64,13 +140,6 @@ export default function Client() {
     setCpf('');
     setTelephone('');
     setCell('');
-  }
-
-  async function getClients() {
-    const response = await api.get('/clients');
-
-    const client = response.data;
-    setClients(client);
   }
 
   useEffect(() => {
@@ -137,7 +206,7 @@ export default function Client() {
                       <Tooltip label='Editar' fontSize='small' placement='top'>
                         <IconButton size='sm'
                           variant="outline"
-                          colorScheme='orange'
+                          colorScheme='cyan'
                           aria-label='Editar'
                           icon={<FiEdit />}
                         />
@@ -145,7 +214,7 @@ export default function Client() {
                       <Tooltip label='Excluir' fontSize='small' placement='top'>
                         <IconButton size='sm'
                           variant="outline"
-                          colorScheme='red'
+                          colorScheme='cyan'
                           aria-label='Excluir'
                           icon={<FiTrash />}
                         />
@@ -187,9 +256,10 @@ export default function Client() {
                     {...register('cpf', { required: true })}
                     placeholder='Informe o CPF'
                     name='cpf'
-                    maxLength={14}
-                    value={cpf}
-                    onChange={(e) => formateCPF(e.target.value)}
+                  // maxLength={14}
+                  // minLength={14}
+                  // value={cpf}
+                  // onChange={(e) => formateCPF(e.target.value)}
                   />
                   {errors.cpf && (
                     <Text color='red' fontSize='xs'>
@@ -206,9 +276,9 @@ export default function Client() {
                     {...register('phone', { required: true })}
                     placeholder='Informe o Telefone'
                     name='phone'
-                    value={telephone}
                     maxLength={15}
-                    onChange={(e) => setTelephone(phoneMask(e.target.value))}
+                  // value={telephone}
+                  // onChange={(e) => setTelephone(phoneMask(e.target.value))}
                   />
                   {errors.phone && (
                     <Text color='red' fontSize='xs'>
@@ -224,8 +294,8 @@ export default function Client() {
                     placeholder='Informe o Celular'
                     name='cellphone'
                     maxLength={15}
-                    value={cell}
-                    onChange={(e) => setCell(phoneMask(e.target.value))}
+                  // value={cell}
+                  // onChange={(e) => setCell(phoneMask(e.target.value))}
                   />
                   {errors.cellphone && (
                     <Text color='red' fontSize='xs'>
@@ -243,6 +313,97 @@ export default function Client() {
                     name='email'
                     type='email'
                   />
+                </FormControl>
+              </SimpleGrid>
+
+              <Box align='center' content='center' flex='1' bg='cyan.900'>
+                <Text fontWeight='bold' color='gray.50'>Endereço</Text>
+              </Box>
+
+              <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
+                <FormControl>
+                  <FormLabel mb='1'>CEP</FormLabel>
+                  <Input
+                    {...register('zip', { required: true })}
+                    aria-invalid={errors.zip ? 'true' : 'false'}
+                    placeholder='Informe o CEP'
+                    name='zip'
+                    type='text'
+                  // value={zip}
+                  // maxLength={8}
+                  // onChange={(event) => loadingAddressFromZip(event)}
+                  />
+                  {errors.zip && (
+                    <Text color='red' fontSize='xs'>
+                      CEP é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel mb='1'>Rua</FormLabel>
+                  <Input
+                    {...register('street', { required: true })}
+                    aria-invalid={errors.street ? 'true' : 'false'}
+                    placeholder='Informe a Rua'
+                    name='street'
+                    type='text'
+                  />
+                  {errors.street && (
+                    <Text color='red' fontSize='xs'>
+                      Rua é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
+              </SimpleGrid>
+              <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
+                <FormControl>
+                  <FormLabel mb='1'>Bairro</FormLabel>
+                  <Input
+                    {...register('neighborhood', { required: true })}
+                    aria-invalid={errors.neighborhood ? 'true' : 'false'}
+                    placeholder='Informe o Bairro'
+                    name='neighborhood'
+                    type='text'
+                  />
+                  {errors.neighborhood && (
+                    <Text color='red' fontSize='xs'>
+                      Bairros é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel mb='1'>Cidade</FormLabel>
+                  <Input
+                    {...register('city', { required: true })}
+                    aria-invalid={errors.city ? 'true' : 'false'}
+                    placeholder='Informe a Cidade'
+                    name='city'
+                    type='text'
+                  />
+                  {errors.city && (
+                    <Text color='red' fontSize='xs'>
+                      Cidade é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
+              </SimpleGrid>
+              <SimpleGrid columns={1}>
+                <FormControl>
+                  <FormLabel mb='1'>Estado</FormLabel>
+                  <Input
+                    {...register('state', { required: true })}
+                    aria-invalid={errors.state ? 'true' : 'false'}
+                    placeholder='Informe o Estado'
+                    name='state'
+                    type='text'
+                  />
+                  {errors.city && (
+                    <Text color='red' fontSize='xs'>
+                      Estado é obrigatório.
+                    </Text>
+                  )}
                 </FormControl>
               </SimpleGrid>
             </Stack>

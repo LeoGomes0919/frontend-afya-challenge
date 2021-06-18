@@ -7,8 +7,8 @@ export function cpfMask(value: string) {
 export function phoneMask(value: string) {
   value = value.replace(/[^\d]/g, '');
   if (value.length >= 11) {
-    return value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    return value.replace(/(\d{2})(\d{5})(\d{4})/, '($1)$2-$3');
   } else {
-    return value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    return value.replace(/(\d{2})(\d{4})(\d{4})/, '($1)$2-$3');
   }
 }
