@@ -11,6 +11,7 @@ import {
   InputLeftElement,
   Text,
   Spinner,
+  Divider,
   useToast
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
@@ -45,12 +46,12 @@ export default function SignIn() {
     >
       <Stack maxWidth={500} width='100%' spacing='8' pr='10'>
         <HStack display='flex' align='center' justify='flex-end'>
-          <Image src='/images/logo.png' />
-          {/* <Image src='/images/logo-name.svg' boxSize={20} /> */}
+          <Image src='/images/logo.png' width={300}/>
         </HStack>
-        <Heading display='flex' flex='1' flexDir='column' border='2px' fontSize='50px' size='xl' color='gray.100' alignItems='flex-end'justify='flex-end'>
-            <Text display='flex'>faça seu <Text ml='4'>login</Text></Text>
-            <Text fontWeight='normal'>na plataforma</Text>
+          <Divider />
+        <Heading display='flex' flex='1' flexDir='column' fontSize='50px' size='xl' color='gray.100' alignItems='flex-end'justify='flex-end'>
+            <Text display='flex' fontWeight='thin' fontSize='40px'>faça seu <Text ml='4' fontWeight='bold' fontSize='50px'>login</Text></Text>
+            <Text fontWeight='thin' fontSize='50px'>na plataforma</Text>
         </Heading>
       </Stack>
       <Flex
@@ -58,8 +59,8 @@ export default function SignIn() {
         as='form'
         width='100%'
         maxWidth={550}
-        border='2px'
-        borderColor='cyan.400'
+        border='1px'
+        borderColor='cyan.800'
         p='16'
         borderRadius={20}
         position='relative'
@@ -70,22 +71,21 @@ export default function SignIn() {
         <Image src='/images/logincircle.png' width={100} position='absolute' top='-10' right='-10'/>
         <Stack spacing='4'>
           <InputGroup>
-            <InputLeftElement
+            <InputLeftElement paddingLeft='2'
               pointerEvents='none'
-              children={<FiUserCheck size={18} color='#E2E8F0' />}
+              children={<FiUserCheck size={25} color='#005765' />}
             />
             <Input
               {...register('username')}
               name='username'
               type='text'
-              placeholder='Usuário'
-              focusBorderColor='gray.400'
-              color='cyan.900'
+              placeholder='usuário'
+                            color='cyan.900'
               bgColor='white'
               variant='filled'
-              borderRadius={4}
+              borderRadius={0}
               _hover={{ bgColor: 'white' }}
-              _focus={{ bgColor: 'white' }}
+              _focus={{ bgColor: 'white', border:'2px solid #21C6B7' }}
               _placeholder={{ color: 'gray.500' }}
               size='lg'
               isRequired
@@ -93,22 +93,23 @@ export default function SignIn() {
           </InputGroup>
 
           <InputGroup>
-            <InputLeftElement
+            <InputLeftElement paddingLeft='2' 
               pointerEvents='none'
-              children={<FiLock size={18} color='#E2E8F0' />}
+              children={<FiLock size={25} color='#005765' />}
             />
             <Input
               {...register('password')}
               name='password'
               type='password'
-              placeholder='Senha'
-              focusBorderColor='gray.100'
-              color='gray.100'
+              placeholder='senha'
+              focusBorderColor='#21C6B7'
+              color='cyan.900'
               bgColor='white'
               variant='filled'
-              borderRadius={4}
+              borderRadius={0}
               _hover={{ bgColor: 'white' }}
-              _focus={{ bgColor: 'white' }}
+              _focus={{ bgColor: 'white',  border:'2px solid #21C6B7'}}
+              _placeholder={{ color: 'gray.500'}}
               size='lg'
               isRequired
             />
@@ -119,8 +120,11 @@ export default function SignIn() {
           disabled={isLoading ?? true}
           mt='8'
           colorScheme='gray'
+          bg='#21C6B7'
           borderRadius={4}
+          color='#005765'
           size='lg'
+          
           _hover={{ bg: 'gray.300' }}
         >
           {isLoading
@@ -128,10 +132,10 @@ export default function SignIn() {
               thickness='4px'
               speed='0.65s'
               emptyColor='gray.50'
-              color='cyean.900'
+              color='cyan.900'
               size='md'
             />
-            : 'ENTRAR'
+            : 'entrar'
           }
         </Button>
       </Flex>
