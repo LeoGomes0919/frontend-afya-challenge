@@ -46,12 +46,25 @@ export default function SignIn() {
     >
       <Stack maxWidth={500} width='100%' spacing='8' pr='10'>
         <HStack display='flex' align='center' justify='flex-end'>
-          <Image src='/images/logo.png' width={300}/>
+          <Image src='/images/logo.png' width={300} />
         </HStack>
-          <Divider />
-        <Heading display='flex' flex='1' flexDir='column' fontSize='50px' size='xl' color='gray.100' alignItems='flex-end'justify='flex-end'>
-            <Text display='flex' fontWeight='thin' fontSize='40px'>faça seu <Text ml='4' fontWeight='bold' fontSize='50px'>login</Text></Text>
-            <Text fontWeight='thin' fontSize='50px'>na plataforma</Text>
+        <Divider />
+        <Heading
+          display='flex'
+          flex='1'
+          flexDir='column'
+          fontSize='50px'
+          size='xl'
+          color='gray.100'
+          alignItems='flex-end'
+          justify='flex-end'
+        >
+          <Text
+            display='flex'
+            fontWeight='thin'
+            fontSize='40px'
+          >faça seu <Text ml='4' fontWeight='bold' fontSize='50px'>login</Text></Text>
+          <Text fontWeight='thin' fontSize='50px'>na plataforma</Text>
         </Heading>
       </Stack>
       <Flex
@@ -68,7 +81,16 @@ export default function SignIn() {
         roundedBottomEnd={100}
         flexDir='column'
       >
-        <Image src='/images/logincircle.png' width={100} position='absolute' top='-10' right='-10'/>
+        <Image
+          src='/images/logincircle.svg'
+          border='1px'
+          borderColor='cyan.700'
+          borderRadius={50}
+          position='absolute'
+          top='-5'
+          right='-5'
+          bg='cyan.700'
+        />
         <Stack spacing='4'>
           <InputGroup>
             <InputLeftElement paddingLeft='2'
@@ -80,12 +102,12 @@ export default function SignIn() {
               name='username'
               type='text'
               placeholder='usuário'
-                            color='cyan.900'
+              color='cyan.900'
               bgColor='white'
               variant='filled'
               borderRadius={0}
               _hover={{ bgColor: 'white' }}
-              _focus={{ bgColor: 'white', border:'2px solid #21C6B7' }}
+              _focus={{ bgColor: 'white', border: '2px solid #21C6B7' }}
               _placeholder={{ color: 'gray.500' }}
               size='lg'
               isRequired
@@ -93,7 +115,7 @@ export default function SignIn() {
           </InputGroup>
 
           <InputGroup>
-            <InputLeftElement paddingLeft='2' 
+            <InputLeftElement paddingLeft='2'
               pointerEvents='none'
               children={<FiLock size={25} color='#005765' />}
             />
@@ -108,8 +130,8 @@ export default function SignIn() {
               variant='filled'
               borderRadius={0}
               _hover={{ bgColor: 'white' }}
-              _focus={{ bgColor: 'white',  border:'2px solid #21C6B7'}}
-              _placeholder={{ color: 'gray.500'}}
+              _focus={{ bgColor: 'white', border: '2px solid #21C6B7' }}
+              _placeholder={{ color: 'gray.500' }}
               size='lg'
               isRequired
             />
@@ -122,10 +144,10 @@ export default function SignIn() {
           colorScheme='gray'
           bg='#21C6B7'
           borderRadius={4}
-          color='#005765'
+          color='gray.50'
           size='lg'
-          
-          _hover={{ bg: 'gray.300' }}
+          fontWeight='normal'
+          _hover={{ bg: 'gray.300', color: '#005765' }}
         >
           {isLoading
             ? <Spinner

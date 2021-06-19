@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Flex,
@@ -24,7 +24,10 @@ import {
   TableCaption,
   Text,
   useToast,
-  Spinner
+  Spinner,
+  Select,
+  InputGroup,
+  InputRightElement
 } from "@chakra-ui/react";
 import { useForm } from 'react-hook-form';
 import { FiEdit, FiTrash, FiUserPlus } from "react-icons/fi";
@@ -32,7 +35,6 @@ import cep from 'cep-promise';
 
 import { Header } from "../../components/Header";
 import { ModalTemplate } from "../../components/ModalTemplate";
-import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 import { cpfMask, phoneMask } from '../../providers';
 import { api } from '../../services/api';
@@ -46,6 +48,17 @@ interface AddressProps {
   state: string;
 }
 
+enum BloodType {
+  AP = 'A+',
+  AN = 'A-',
+  BP = 'B+',
+  BN = 'B-',
+  OP = 'O+',
+  ON = 'O-',
+  ABP = 'AB+',
+  ABN = 'AB-'
+}
+
 interface ClientProps {
   id: number;
   name: string;
@@ -53,35 +66,52 @@ interface ClientProps {
   phone: string;
   cellphone: string;
   email: string;
-  blood_type: string;
+  blood_type: BloodType;
 }
+
 
 export default function Client() {
   const toast = useToast();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm();
   const [clients, setClients] = useState<ClientProps[]>([]);
-  const [address, setAddress] = useState<AddressProps[]>([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [cpf, setCpf] = useState('')
-  const [telephone, setTelephone] = useState('');
-  const [cell, setCell] = useState('');
+  const [phone, setPhone] = useState('');
+  const [cellPhone, setCellPhone] = useState('');
   const [zip, setZip] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [logindGetAddress, setLoadindGetAddress] = useState(false);
+  const [lodingRegisterForm, setLoadingRegisterForm] = useState(false);
+  const inpuFocusRef = useRef();
 
-  const formateCPF = (value: string) => {
-    setCpf(cpfMask(value));
+  async function loadingAddressFromZip() {
+    try {
+      if (zip.length >= 8) {
+        setLoadindGetAddress(true);
+        const response = await cep(zip, { timeout: 5000, providers: ['viacep'] });
+        const { state, city, neighborhood, street } = response;
+        setValue('state', state);
+        setValue('city', city);
+        setValue('neighborhood', neighborhood);
+        setValue('street', street);
+      }
+    } catch (err) {
+      toast({
+        description: `${err.errors[0].message}`,
+        status: 'error',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
+      setValue('state', '');
+      setValue('city', '');
+      setValue('neighborhood', '');
+      setValue('street', '');
+    }
+    setLoadindGetAddress(false);
   }
 
-  // async function loadingAddressFromZip(event) {
-  //   setZip(event.target.value);
-  //   if (zip.length >= 8) {
-  //     const response = await cep(zip);
-  //     console.log(response);
-  //   }
-  // }
-
   async function getClients() {
-    const response = await api.get('/clients');
+    const response = await api.get(`/clients`);
 
     const client = response.data;
     setClients(client);
@@ -109,16 +139,17 @@ export default function Client() {
       cellphone,
       email,
       blood_type,
-      address: {
-        zip,
-        street,
-        neighborhood,
-        city,
-        state
-      }
+      // address: {
+      //   zip,
+      //   street,
+      //   neighborhood,
+      //   city,
+      //   state
+      // }
     }
 
     try {
+      setLoadingRegisterForm(true);
       await api.post('/clients', client);
       getClients();
       toast({
@@ -130,16 +161,24 @@ export default function Client() {
       });
       reset();
       onClose();
+      setLoadingRegisterForm(false);
     } catch (err) {
-      console.log(err);
+      toast({
+        description: `${err.response.data.message}`,
+        status: 'error',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   }
 
   function resetForm() {
     reset();
     setCpf('');
-    setTelephone('');
-    setCell('');
+    setPhone('');
+    setCellPhone('');
+    setZip('');
   }
 
   useEffect(() => {
@@ -227,13 +266,16 @@ export default function Client() {
           </Table>
           {/* <Pagination /> */}
           <ModalTemplate
+            initialFocusRef={inpuFocusRef}
             isOpen={isOpen}
             onClose={onClose}
+            disabled={lodingRegisterForm === true ? true : false}
             title='Cadastro de Clientes'
             handleAction={handleSubmit(handleRegisterClient)}
             reset={resetForm}
           >
             <Stack spacing='4'>
+
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
                 <FormControl>
                   <FormLabel mb='1'>Nome</FormLabel>
@@ -242,6 +284,7 @@ export default function Client() {
                     {...register('name', { required: true })}
                     placeholder='Informe o Nome completo'
                     name='name'
+                    ref={inpuFocusRef}
                   />
                   {errors.name && (
                     <Text color='red' fontSize='xs'>
@@ -256,10 +299,10 @@ export default function Client() {
                     {...register('cpf', { required: true })}
                     placeholder='Informe o CPF'
                     name='cpf'
-                  // maxLength={14}
-                  // minLength={14}
-                  // value={cpf}
-                  // onChange={(e) => formateCPF(e.target.value)}
+                    maxLength={14}
+                    minLength={14}
+                    value={cpf}
+                    onChange={(e) => setCpf(cpfMask(e.target.value))}
                   />
                   {errors.cpf && (
                     <Text color='red' fontSize='xs'>
@@ -277,8 +320,8 @@ export default function Client() {
                     placeholder='Informe o Telefone'
                     name='phone'
                     maxLength={15}
-                  // value={telephone}
-                  // onChange={(e) => setTelephone(phoneMask(e.target.value))}
+                    value={phone}
+                    onChange={(e) => setPhone(phoneMask(e.target.value))}
                   />
                   {errors.phone && (
                     <Text color='red' fontSize='xs'>
@@ -294,8 +337,8 @@ export default function Client() {
                     placeholder='Informe o Celular'
                     name='cellphone'
                     maxLength={15}
-                  // value={cell}
-                  // onChange={(e) => setCell(phoneMask(e.target.value))}
+                    value={cellPhone}
+                    onChange={(e) => setCellPhone(phoneMask(e.target.value))}
                   />
                   {errors.cellphone && (
                     <Text color='red' fontSize='xs'>
@@ -304,7 +347,28 @@ export default function Client() {
                   )}
                 </FormControl>
               </SimpleGrid>
-              <SimpleGrid columns={1}>
+              <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
+                <FormControl>
+                  <FormLabel mb='1'>Tipo Sanguíneo</FormLabel>
+                  <Select placeholder='Selecione um tipo'
+                    {...register('blood_type', { required: true })}
+                    aria-invalid={errors.blood_type ? 'true' : 'false'}
+                  >
+                    {Object.keys(BloodType).map(key => (
+                      <option
+                        key={BloodType[key]}
+                        value={BloodType[key]}
+                      >
+                        {BloodType[key]}
+                      </option>
+                    ))}
+                  </Select>
+                  {errors.blood_type && (
+                    <Text color='red' fontSize='xs'>
+                      Tipo Sanguíneo é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
                 <FormControl>
                   <FormLabel mb='1'>E-mail</FormLabel>
                   <Input
@@ -323,23 +387,26 @@ export default function Client() {
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
                 <FormControl>
                   <FormLabel mb='1'>CEP</FormLabel>
-                  <Input
-                    {...register('zip', { required: true })}
-                    aria-invalid={errors.zip ? 'true' : 'false'}
-                    placeholder='Informe o CEP'
-                    name='zip'
-                    type='text'
-                  // value={zip}
-                  // maxLength={8}
-                  // onChange={(event) => loadingAddressFromZip(event)}
-                  />
+                  <InputGroup>
+                    <Input
+                      {...register('zip', { required: true })}
+                      aria-invalid={errors.zip ? 'true' : 'false'}
+                      placeholder='Informe o CEP'
+                      name='zip'
+                      type='text'
+                      value={zip}
+                      maxLength={8}
+                      onBlurCapture={() => loadingAddressFromZip()}
+                      onChange={(e) => setZip(e.target.value)}
+                    />
+                    {logindGetAddress === true ? <InputRightElement children={<Spinner size="sm" />} /> : ''}
+                  </InputGroup>
                   {errors.zip && (
                     <Text color='red' fontSize='xs'>
                       CEP é obrigatório.
                     </Text>
                   )}
                 </FormControl>
-
                 <FormControl>
                   <FormLabel mb='1'>Rua</FormLabel>
                   <Input
@@ -372,7 +439,23 @@ export default function Client() {
                     </Text>
                   )}
                 </FormControl>
-
+                <FormControl>
+                  <FormLabel mb='1'>Número</FormLabel>
+                  <Input
+                    {...register('number', { required: true })}
+                    aria-invalid={errors.number ? 'true' : 'false'}
+                    placeholder='Informe o Número ou S/N'
+                    name='number'
+                    type='text'
+                  />
+                  {errors.number && (
+                    <Text color='red' fontSize='xs'>
+                      Número é obrigatório.
+                    </Text>
+                  )}
+                </FormControl>
+              </SimpleGrid>
+              <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
                 <FormControl>
                   <FormLabel mb='1'>Cidade</FormLabel>
                   <Input
@@ -388,8 +471,6 @@ export default function Client() {
                     </Text>
                   )}
                 </FormControl>
-              </SimpleGrid>
-              <SimpleGrid columns={1}>
                 <FormControl>
                   <FormLabel mb='1'>Estado</FormLabel>
                   <Input
