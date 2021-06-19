@@ -72,16 +72,18 @@ interface ClientProps {
 
 export default function Client() {
   const toast = useToast();
+  const inpuFocusRef = useRef();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm();
   const [clients, setClients] = useState<ClientProps[]>([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [cpf, setCpf] = useState('')
   const [phone, setPhone] = useState('');
   const [cellPhone, setCellPhone] = useState('');
   const [zip, setZip] = useState('');
   const [logindGetAddress, setLoadindGetAddress] = useState(false);
   const [lodingRegisterForm, setLoadingRegisterForm] = useState(false);
-  const inpuFocusRef = useRef();
+  const [nameClient, setNameClient] = useState('');
+  const [idClient, setIdClient] = useState('');
 
   async function loadingAddressFromZip() {
     try {
@@ -113,8 +115,36 @@ export default function Client() {
   async function getClients() {
     const response = await api.get(`/clients`);
 
-    const client = response.data;
-    setClients(client);
+    const { data } = response.data;
+    setClients(data);
+  }
+
+  function openModalDeleteClient(id: string, name: string) {
+    onOpen();
+    setNameClient(name);
+    setIdClient(id);
+  }
+
+  async function deleteClient() {
+    try {
+      await api.delete(`/clients/${idClient}`);
+      getClients();
+      toast({
+        description: 'Cliente deletado com sucesso!',
+        status: 'success',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        description: 'Ocorreu um erro ao tentar deletar o cliente!',
+        status: 'error',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   }
 
   async function handleRegisterClient(data) {
@@ -139,19 +169,21 @@ export default function Client() {
       cellphone,
       email,
       blood_type,
-      // address: {
-      //   zip,
-      //   street,
-      //   neighborhood,
-      //   city,
-      //   state
-      // }
+      address: {
+        zip,
+        street,
+        neighborhood,
+        city,
+        state
+      }
     }
 
+    setLoadingRegisterForm(true);
     try {
-      setLoadingRegisterForm(true);
       await api.post('/clients', client);
+      console.log(client);
       getClients();
+      reset();
       toast({
         description: 'Cliente cadastrado com sucesso!',
         status: 'success',
@@ -159,9 +191,7 @@ export default function Client() {
         duration: 5000,
         isClosable: true,
       });
-      reset();
       onClose();
-      setLoadingRegisterForm(false);
     } catch (err) {
       toast({
         description: `${err.response.data.message}`,
@@ -171,6 +201,7 @@ export default function Client() {
         isClosable: true,
       });
     }
+    setLoadingRegisterForm(false);
   }
 
   function resetForm() {
@@ -251,7 +282,9 @@ export default function Client() {
                         />
                       </Tooltip>
                       <Tooltip label='Excluir' fontSize='small' placement='top'>
-                        <IconButton size='sm'
+                        <IconButton
+                          onClick={() => openModalDeleteClient(client.id.toString(), client.name)}
+                          size='sm'
                           variant="outline"
                           colorScheme='cyan'
                           aria-label='Excluir'
@@ -265,6 +298,14 @@ export default function Client() {
             </Tbody>
           </Table>
           {/* <Pagination /> */}
+          <ModalTemplate
+            title={`Deseja excluir o cliente ${nameClient} ?`}
+            isOpen={isOpen}
+            onClose={onClose}
+            handleAction={() => deleteClient()}
+          >
+
+          </ModalTemplate>
           <ModalTemplate
             initialFocusRef={inpuFocusRef}
             isOpen={isOpen}
@@ -319,7 +360,8 @@ export default function Client() {
                     {...register('phone', { required: true })}
                     placeholder='Informe o Telefone'
                     name='phone'
-                    maxLength={15}
+                    maxLength={14}
+                    minLength={14}
                     value={phone}
                     onChange={(e) => setPhone(phoneMask(e.target.value))}
                   />
@@ -336,7 +378,8 @@ export default function Client() {
                     {...register('cellphone', { required: true })}
                     placeholder='Informe o Celular'
                     name='cellphone'
-                    maxLength={15}
+                    maxLength={14}
+                    minLength={14}
                     value={cellPhone}
                     onChange={(e) => setCellPhone(phoneMask(e.target.value))}
                   />

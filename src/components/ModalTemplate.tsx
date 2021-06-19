@@ -7,7 +7,8 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalOverlay
+  ModalOverlay,
+  Spinner
 } from '@chakra-ui/react'
 import { FocusableElement } from "@chakra-ui/utils";
 import { FieldValues, UseFormReset } from 'react-hook-form';
@@ -20,7 +21,8 @@ interface ModalProps {
   children: React.ReactNode;
   handleAction?: () => void
   reset?: UseFormReset<FieldValues>;
-  initialFocusRef?: RefObject<FocusableElement>
+  initialFocusRef?: RefObject<FocusableElement>;
+  size?: 'xl' | (string & {}) | 'xs' | 'sm' | 'md' | 'lg' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full';
 }
 
 export function ModalTemplate({
@@ -31,7 +33,8 @@ export function ModalTemplate({
   title,
   handleAction,
   reset,
-  initialFocusRef
+  initialFocusRef,
+  size
 }: ModalProps) {
 
   function handleCloseModal() {
@@ -42,11 +45,12 @@ export function ModalTemplate({
   return (
     <Modal
       closeOnOverlayClick={false}
-      size='xl'
+      size={!size ? 'xl' : size}
       blockScrollOnMount={false}
       isOpen={isOpen}
       onClose={onClose}
       initialFocusRef={initialFocusRef}
+      scrollBehavior='inside'
     >
       <ModalOverlay />
       <ModalContent as='form' onSubmit={handleAction}>
@@ -57,7 +61,16 @@ export function ModalTemplate({
         </ModalBody>
         <ModalFooter>
           <Button type='submit' colorScheme='blue' mr={3} disabled={disabled}>
-            Salvar
+            {disabled === true
+              ? <Spinner
+                thickness='2px'
+                speed='0.65s'
+                emptyColor='cyan.100'
+                color='cyan.900'
+                size='md'
+              />
+              : 'Salvar'
+            }
           </Button>
           <Button onClick={() => handleCloseModal()}>Cancelar</Button>
         </ModalFooter>

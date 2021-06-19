@@ -20,19 +20,25 @@ import { FiUserCheck, FiLock } from 'react-icons/fi';
 import { AuthContext } from '../contexts/AuthContext';
 
 export default function SignIn() {
+  const toast = useToast();
   const { register, handleSubmit } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useContext(AuthContext);
 
   async function handleSignIn(data) {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       await signIn(data);
-      setIsLoading(false);
     } catch (err) {
-      console.log(err);
-      setIsLoading(false);
+      toast({
+        description: `${err.response.data.message}`,
+        status: 'error',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+      });
     }
+    setIsLoading(false);
   }
 
   return (
@@ -64,7 +70,7 @@ export default function SignIn() {
             fontWeight='thin'
             fontSize='40px'
           >faça seu <Text ml='4' fontWeight='bold' fontSize='50px'>login</Text></Text>
-          <Text fontWeight='thin' fontSize='50px'>na plataforma</Text>
+          <Text fontWeight='thin' fontSize='40px'>na plataforma</Text>
         </Heading>
       </Stack>
       <Flex

@@ -41,37 +41,31 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function signIn({ username, password }: SignInData) {
-    try {
-      const response = await api.post('/auth/', {
-        username,
-        password
-      });
+    const response = await api.post('/auth/', {
+      username,
+      password
+    });
 
-      const { token, id, name } = response.data;
+    const { token, id, name } = response.data;
 
-      setCookie(undefined, 'clinic-token', token, {
-        maxAge: 60 * 60 * 1, // 1 hour
-        path: '/'
-      });
+    setCookie(undefined, 'clinic-token', token, {
+      maxAge: 60 * 60 * 1, // 1 hour
+      path: '/'
+    });
 
-      setCookie(undefined, 'clinic-user', id, {
-        maxAge: 60 * 60 * 24 * 30, // 30 dias
-        path: '/'
-      });
+    setCookie(undefined, 'clinic-user', id, {
+      maxAge: 60 * 60 * 24 * 30, // 30 dias
+      path: '/'
+    });
 
-      api.defaults.headers['Authorization'] = token;
+    api.defaults.headers['Authorization'] = token;
 
-      setUser({
-        id,
-        name
-      });
+    setUser({
+      id,
+      name
+    });
 
-      Router.push('/dashboard');
-    } catch (err) {
-      const { message } = err.response.data;
-      console.log(message);
-    }
-
+    Router.push('/dashboard');
   }
 
   return (
