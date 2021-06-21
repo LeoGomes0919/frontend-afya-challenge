@@ -17,36 +17,36 @@ import {
   Tooltip,
   Stack,
   useDisclosure,
-  FormControl,
-  FormLabel,
-  Input,
   SimpleGrid,
   TableCaption,
   Text,
   useToast,
   Spinner,
+  FormControl,
+  FormLabel,
   Select,
   InputGroup,
-  InputRightElement
+  InputRightElement,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  FormErrorMessage
 } from "@chakra-ui/react";
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { FiEdit, FiTrash, FiUserPlus } from "react-icons/fi";
 import cep from 'cep-promise';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 import { Header } from "../../components/Header";
 import { ModalTemplate } from "../../components/ModalTemplate";
 import { Sidebar } from "../../components/Sidebar";
 import { cpfMask, phoneMask } from '../../providers';
 import { api } from '../../services/api';
-
-interface AddressProps {
-  id: number;
-  zip: string;
-  street: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-}
+import { Input } from '../../components/Form/Input';
 
 enum BloodType {
   AP = 'A+',
@@ -59,6 +59,15 @@ enum BloodType {
   ABN = 'AB-'
 }
 
+interface AddressProps {
+  zip: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+}
+
 interface ClientProps {
   id: number;
   name: string;
@@ -67,34 +76,53 @@ interface ClientProps {
   cellphone: string;
   email: string;
   blood_type: BloodType;
+  address: AddressProps;
 }
 
+const registerFormSchema = yup.object().shape({
+  name: yup.string().required('Nome é obrigatório'),
+  cpf: yup.string().required('CPF é obrigatório'),
+  phone: yup.string().required('Telefofne é obrigatório'),
+  cellphone: yup.string().required('Celular é obrigatório'),
+  blood_type: yup.string().required('Tipo sanguíneo é obrigatório'),
+
+  address: yup.object().shape({
+    zip: yup.string().required('CEP é obrigatório'),
+    street: yup.string().required('Rua é obrigatório'),
+    number: yup.string().required('Núme é obrigatório ou informe S/N'),
+    neighborhood: yup.string().required('Bairro é obrigatório'),
+    city: yup.string().required('Cidade é obrigatório'),
+    state: yup.string().required('Estado é obrigatório')
+  }),
+});
 
 export default function Client() {
-  const toast = useToast();
-  const inpuFocusRef = useRef();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm();
+  const { register, handleSubmit, setValue, getValues, reset, formState: { errors, isSubmitting } } = useForm({
+    resolver: yupResolver(registerFormSchema)
+  });
   const [clients, setClients] = useState<ClientProps[]>([]);
-  const [cpf, setCpf] = useState('')
-  const [phone, setPhone] = useState('');
-  const [cellPhone, setCellPhone] = useState('');
-  const [zip, setZip] = useState('');
+  const toast = useToast();
+  const cancelRef = useRef()
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [logindGetAddress, setLoadindGetAddress] = useState(false);
-  const [lodingRegisterForm, setLoadingRegisterForm] = useState(false);
-  const [nameClient, setNameClient] = useState('');
+  const [isOpenConfirmation, setIsOpenConfirmation] = useState(false);
   const [idClient, setIdClient] = useState('');
+  const [action, setAction] = useState('');
+  const [nameClient, setNameClient] = useState('');
+
+  const onCloseConfirmation = () => setIsOpenConfirmation(false);
 
   async function loadingAddressFromZip() {
+    const zipCode = getValues('address.zip');
     try {
-      if (zip.length >= 8) {
+      if (zipCode.length >= 8) {
         setLoadindGetAddress(true);
-        const response = await cep(zip, { timeout: 5000, providers: ['viacep'] });
+        const response = await cep(zipCode, { timeout: 5000, providers: ['viacep'] });
         const { state, city, neighborhood, street } = response;
-        setValue('state', state);
-        setValue('city', city);
-        setValue('neighborhood', neighborhood);
-        setValue('street', street);
+        setValue('address.state', state);
+        setValue('address.city', city);
+        setValue('address.neighborhood', neighborhood);
+        setValue('address.street', street);
       }
     } catch (err) {
       toast({
@@ -104,10 +132,10 @@ export default function Client() {
         duration: 5000,
         isClosable: true,
       });
-      setValue('state', '');
-      setValue('city', '');
-      setValue('neighborhood', '');
-      setValue('street', '');
+      setValue('address.state', '');
+      setValue('address.city', '');
+      setValue('address.neighborhood', '');
+      setValue('address.street', '');
     }
     setLoadindGetAddress(false);
   }
@@ -119,8 +147,8 @@ export default function Client() {
     setClients(data);
   }
 
-  function openModalDeleteClient(id: string, name: string) {
-    onOpen();
+  function openConfirmation(id: string, name: string) {
+    setIsOpenConfirmation(true);
     setNameClient(name);
     setIdClient(id);
   }
@@ -145,53 +173,61 @@ export default function Client() {
         isClosable: true,
       });
     }
+    onCloseConfirmation();
   }
 
-  async function handleRegisterClient(data) {
-    const {
-      name,
-      cpf,
-      phone,
-      cellphone,
-      email,
-      blood_type,
+  async function openModalEditClient(id: number, clientName: string) {
+    setAction('EDITING');
+    setIdClient(id.toString());
+    setNameClient(clientName);
+    const client = clients.find(client => client.id === id);
+    const { name, cpf, phone, cellphone, blood_type, email, address: {
       zip,
       street,
+      number,
       neighborhood,
       city,
       state
-    } = data;
+    } } = client;
+    setValue('name', name);
+    setValue('cpf', cpf);
+    setValue('phone', phone);
+    setValue('cellphone', cellphone);
+    setValue('blood_type', blood_type);
+    setValue('email', email);
 
-    const client = {
-      name,
-      cpf,
-      phone,
-      cellphone,
-      email,
-      blood_type,
-      address: {
-        zip,
-        street,
-        neighborhood,
-        city,
-        state
-      }
-    }
+    setValue('address.zip', zip);
+    setValue('address.street', street);
+    setValue('address.number', number);
+    setValue('address.neighborhood', neighborhood);
+    setValue('address.city', city);
+    setValue('address.state', state);
+    onOpen();
+  }
 
-    setLoadingRegisterForm(true);
+  const handleRegister: SubmitHandler<Omit<ClientProps, 'id'>> = async (data) => {
+    const { name, cpf, phone, cellphone, email, blood_type, address } = data;
+    const client = { name, cpf, phone, cellphone, email, blood_type, address };
     try {
-      await api.post('/clients', client);
-      console.log(client);
-      getClients();
-      reset();
+      if (action === 'CREATE') {
+        await api.post('/clients', client);
+      } else {
+        await api.put(`/clients/${idClient}`, client);
+      }
+
       toast({
-        description: 'Cliente cadastrado com sucesso!',
+        description: `${action === 'CREATE'
+          ? 'Cliente cadastrado com sucesso!'
+          : 'Dados do cliente alterados com sucesso!'
+          }`,
         status: 'success',
         position: 'top-right',
         duration: 5000,
         isClosable: true,
       });
+      reset();
       onClose();
+      getClients();
     } catch (err) {
       toast({
         description: `${err.response.data.message}`,
@@ -201,15 +237,16 @@ export default function Client() {
         isClosable: true,
       });
     }
-    setLoadingRegisterForm(false);
   }
 
-  function resetForm() {
+  function openModal() {
+    onOpen();
+    setAction('CREATE');
+  }
+
+  function closeModal() {
     reset();
-    setCpf('');
-    setPhone('');
-    setCellPhone('');
-    setZip('');
+    onClose();
   }
 
   useEffect(() => {
@@ -242,7 +279,7 @@ export default function Client() {
               size='sm'
               fontSize='sm'
               leftIcon={<Icon as={FiUserPlus} />}
-              onClick={onOpen}
+              onClick={() => openModal()}
             >
               Cadastrar cliente
             </Button>
@@ -275,6 +312,7 @@ export default function Client() {
                     <HStack spacing='2'>
                       <Tooltip label='Editar' fontSize='small' placement='top'>
                         <IconButton size='sm'
+                          onClick={() => openModalEditClient(client.id, client.name)}
                           variant="outline"
                           colorScheme='cyan'
                           aria-label='Editar'
@@ -283,7 +321,7 @@ export default function Client() {
                       </Tooltip>
                       <Tooltip label='Excluir' fontSize='small' placement='top'>
                         <IconButton
-                          onClick={() => openModalDeleteClient(client.id.toString(), client.name)}
+                          onClick={() => openConfirmation(client.id.toString(), client.name)}
                           size='sm'
                           variant="outline"
                           colorScheme='cyan'
@@ -298,104 +336,90 @@ export default function Client() {
             </Tbody>
           </Table>
           {/* <Pagination /> */}
-          <ModalTemplate
-            title={`Deseja excluir o cliente ${nameClient} ?`}
-            isOpen={isOpen}
-            onClose={onClose}
-            handleAction={() => deleteClient()}
+          <AlertDialog
+            isOpen={isOpenConfirmation}
+            leastDestructiveRef={cancelRef}
+            onClose={onCloseConfirmation}
           >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+                  Confirmação
+                </AlertDialogHeader>
 
-          </ModalTemplate>
+                <AlertDialogBody>
+                  Deseja realmente excluir o cliente <strong>{nameClient.toUpperCase()}</strong> ?
+                  <p>Essa operação não tem mais volta.</p>
+                </AlertDialogBody>
+
+                <AlertDialogFooter>
+                  <Button colorScheme='red' mr={3} onClick={() => deleteClient()} fontWeight='normal'>Confirmar</Button>
+                  <Button variant='outline' ref={cancelRef} onClick={() => onCloseConfirmation()}>Cancelar</Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
           <ModalTemplate
-            initialFocusRef={inpuFocusRef}
             isOpen={isOpen}
-            onClose={onClose}
-            disabled={lodingRegisterForm === true ? true : false}
-            title='Cadastro de Clientes'
-            handleAction={handleSubmit(handleRegisterClient)}
-            reset={resetForm}
+            onClose={closeModal}
+            loading={isSubmitting}
+            handleAction={handleSubmit(handleRegister)}
+            title={action === 'CREATE'
+              ? 'Cadastro de Clientes'
+              : `Editando cadastro de ${nameClient.toUpperCase()}`
+            }
           >
             <Stack spacing='4'>
 
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>Nome</FormLabel>
-                  <Input
-                    aria-invalid={errors.name ? 'true' : 'false'}
-                    {...register('name', { required: true })}
-                    placeholder='Informe o Nome completo'
-                    name='name'
-                    ref={inpuFocusRef}
-                  />
-                  {errors.name && (
-                    <Text color='red' fontSize='xs'>
-                      Nome é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>CPF</FormLabel>
-                  <Input
-                    aria-invalid={errors.cpf ? 'true' : 'false'}
-                    {...register('cpf', { required: true })}
-                    placeholder='Informe o CPF'
-                    name='cpf'
-                    maxLength={14}
-                    minLength={14}
-                    value={cpf}
-                    onChange={(e) => setCpf(cpfMask(e.target.value))}
-                  />
-                  {errors.cpf && (
-                    <Text color='red' fontSize='xs'>
-                      CPF é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
+                <Input
+                  name='name'
+                  type='text'
+                  label='Nome'
+                  error={errors.name}
+                  placeholder='Informe o Nome Completo'
+                  {...register('name')}
+                  autoFocus
+                />
+
+                <Input
+                  name='cpf'
+                  type='text'
+                  label='CPF'
+                  maxLength={14}
+                  error={errors.cpf}
+                  placeholder='Informe o CPF'
+                  {...register('cpf')}
+                />
               </SimpleGrid>
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>Telefone</FormLabel>
-                  <Input
-                    aria-invalid={errors.phone ? 'true' : 'false'}
-                    {...register('phone', { required: true })}
-                    placeholder='Informe o Telefone'
-                    name='phone'
-                    maxLength={14}
-                    minLength={14}
-                    value={phone}
-                    onChange={(e) => setPhone(phoneMask(e.target.value))}
-                  />
-                  {errors.phone && (
-                    <Text color='red' fontSize='xs'>
-                      Telefone é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>Celular</FormLabel>
-                  <Input
-                    aria-invalid={errors.cellphone ? 'true' : 'false'}
-                    {...register('cellphone', { required: true })}
-                    placeholder='Informe o Celular'
-                    name='cellphone'
-                    maxLength={14}
-                    minLength={14}
-                    value={cellPhone}
-                    onChange={(e) => setCellPhone(phoneMask(e.target.value))}
-                  />
-                  {errors.cellphone && (
-                    <Text color='red' fontSize='xs'>
-                      Celular é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
+                <Input
+                  name='phone'
+                  type='text'
+                  label='Telefone'
+                  maxLength={15}
+                  error={errors.phone}
+                  placeholder='Informe o Telefone'
+                  {...register('phone')}
+                />
+
+                <Input
+                  name='cellphone'
+                  type='text'
+                  label='Celular'
+                  maxLength={15}
+                  error={errors.cellphone}
+                  placeholder='Informe o Celular'
+                  {...register('cellphone')}
+                />
+
               </SimpleGrid>
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>Tipo Sanguíneo</FormLabel>
-                  <Select placeholder='Selecione um tipo'
+                <FormControl isInvalid={!!errors.blood_type}>
+                  <FormLabel mb='0.5'>Tipo Sanguíneo</FormLabel>
+                  <Select
+                    placeholder='Selecione um tipo'
                     {...register('blood_type', { required: true })}
-                    aria-invalid={errors.blood_type ? 'true' : 'false'}
                   >
                     {Object.keys(BloodType).map(key => (
                       <option
@@ -407,20 +431,18 @@ export default function Client() {
                     ))}
                   </Select>
                   {errors.blood_type && (
-                    <Text color='red' fontSize='xs'>
-                      Tipo Sanguíneo é obrigatório.
-                    </Text>
+                    <FormErrorMessage>
+                      {errors.blood_type.message}
+                    </FormErrorMessage>
                   )}
                 </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>E-mail</FormLabel>
-                  <Input
-                    {...register('email')}
-                    placeholder='Informe o E-mail'
-                    name='email'
-                    type='email'
-                  />
-                </FormControl>
+                <Input
+                  name='email'
+                  type='email'
+                  label='Email'
+                  placeholder='Informe o Email'
+                  {...register('email')}
+                />
               </SimpleGrid>
 
               <Box align='center' content='center' flex='1' bg='cyan.900'>
@@ -428,112 +450,72 @@ export default function Client() {
               </Box>
 
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>CEP</FormLabel>
-                  <InputGroup>
-                    <Input
-                      {...register('zip', { required: true })}
-                      aria-invalid={errors.zip ? 'true' : 'false'}
-                      placeholder='Informe o CEP'
-                      name='zip'
-                      type='text'
-                      value={zip}
-                      maxLength={8}
-                      onBlurCapture={() => loadingAddressFromZip()}
-                      onChange={(e) => setZip(e.target.value)}
-                    />
-                    {logindGetAddress === true ? <InputRightElement children={<Spinner size="sm" />} /> : ''}
-                  </InputGroup>
-                  {errors.zip && (
-                    <Text color='red' fontSize='xs'>
-                      CEP é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>Rua</FormLabel>
+                <InputGroup>
                   <Input
-                    {...register('street', { required: true })}
-                    aria-invalid={errors.street ? 'true' : 'false'}
-                    placeholder='Informe a Rua'
-                    name='street'
+                    name='zip'
                     type='text'
+                    label='CEP'
+                    maxLength={8}
+                    error={errors.address?.zip}
+                    placeholder='Informe o CEP'
+                    {...register('address.zip')}
+                    onBlur={() => loadingAddressFromZip()}
                   />
-                  {errors.street && (
-                    <Text color='red' fontSize='xs'>
-                      Rua é obrigatório.
-                    </Text>
+                  {logindGetAddress && (
+                    <InputRightElement mt='6' children={<Spinner size='sm' />} />
                   )}
-                </FormControl>
+                </InputGroup>
+                <Input
+                  name='street'
+                  type='text'
+                  label='Rua'
+                  error={errors.address?.street}
+                  placeholder='Informe a Rua'
+                  {...register('address.street')}
+                />
               </SimpleGrid>
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>Bairro</FormLabel>
-                  <Input
-                    {...register('neighborhood', { required: true })}
-                    aria-invalid={errors.neighborhood ? 'true' : 'false'}
-                    placeholder='Informe o Bairro'
-                    name='neighborhood'
-                    type='text'
-                  />
-                  {errors.neighborhood && (
-                    <Text color='red' fontSize='xs'>
-                      Bairros é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>Número</FormLabel>
-                  <Input
-                    {...register('number', { required: true })}
-                    aria-invalid={errors.number ? 'true' : 'false'}
-                    placeholder='Informe o Número ou S/N'
-                    name='number'
-                    type='text'
-                  />
-                  {errors.number && (
-                    <Text color='red' fontSize='xs'>
-                      Número é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
+                <Input
+                  name='number'
+                  type='text'
+                  label='Número'
+                  error={errors.address?.number}
+                  placeholder='Informe o Número'
+                  {...register('address.number')}
+                />
+                <Input
+                  name='neighborhood'
+                  type='text'
+                  label='Bairro'
+                  error={errors.address?.neighborhood}
+                  placeholder='Informe o Bairro'
+                  {...register('address.neighborhood')}
+                />
               </SimpleGrid>
               <SimpleGrid minChildWidth="240px" spacing='10px' w='100%'>
-                <FormControl>
-                  <FormLabel mb='1'>Cidade</FormLabel>
-                  <Input
-                    {...register('city', { required: true })}
-                    aria-invalid={errors.city ? 'true' : 'false'}
-                    placeholder='Informe a Cidade'
-                    name='city'
-                    type='text'
-                  />
-                  {errors.city && (
-                    <Text color='red' fontSize='xs'>
-                      Cidade é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb='1'>Estado</FormLabel>
-                  <Input
-                    {...register('state', { required: true })}
-                    aria-invalid={errors.state ? 'true' : 'false'}
-                    placeholder='Informe o Estado'
-                    name='state'
-                    type='text'
-                  />
-                  {errors.city && (
-                    <Text color='red' fontSize='xs'>
-                      Estado é obrigatório.
-                    </Text>
-                  )}
-                </FormControl>
+                <Input
+                  name='city'
+                  type='text'
+                  label='Cidade'
+                  error={errors.address?.city}
+                  placeholder='Informe a Cidade'
+                  {...register('address.city')}
+                />
+
+                <Input
+                  name='state'
+                  type='text'
+                  label='Estado'
+                  error={errors.address?.state}
+                  placeholder='Informe o Estado'
+                  {...register('address.state')}
+                />
               </SimpleGrid>
+
             </Stack>
           </ModalTemplate>
         </Box>
       </Flex>
-    </Box>
+    </Box >
   );
 }

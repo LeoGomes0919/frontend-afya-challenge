@@ -12,3 +12,14 @@ export function phoneMask(value: string) {
     return value.replace(/(\d{2})(\d{4})(\d{4})/, '($1)$2-$3');
   }
 }
+
+export function formatDate(value: Date) {
+  return new Intl.DateTimeFormat('pt-BR').format(value);
+}
+
+export function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-br', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value);
+}

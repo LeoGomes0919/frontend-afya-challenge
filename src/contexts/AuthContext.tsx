@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
       name
     });
 
-    Router.push('/dashboard');
+    Router.push('/clients');
   }
 
   return (

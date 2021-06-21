@@ -31,7 +31,7 @@ export default function SignIn() {
       await signIn(data);
     } catch (err) {
       toast({
-        description: `${err.response.data.message}`,
+        description: 'Usuário ou senha incorreto.',
         status: 'error',
         position: 'top-right',
         duration: 5000,
